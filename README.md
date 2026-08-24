@@ -1,43 +1,35 @@
-# Digital Twin Retina: 3D Surface Mesh Assets
+# Digital Twin Retina & 3D Mesh Pipeline: Project Overview
 
-This repository provides simulation-ready 3D surface mesh assets of the human retina, extracted from CAD ocular geometries (`feelpp/mesh.eye`) and optimized for physics/FEM simulations and synthetic data generation within the NASA GeneLab AWG AI/ML subgroup.
+## What This Project Is
+This repository is a computational biomedical engineering pipeline. It takes raw 3D anatomical eye scans (like the retina, cornea, lens, sclera, and optic nerve) and transforms them from hollow, digital shapes into solid, physics-ready models. 
 
-## 📦 Available Assets
-
-| Asset Name | Triangle Count | Watertight? | Description |
-| :--- | :--- | :--- | :--- |
-| **`retina_simplified_50k.stl`** | 50,000 | `True` | Quadric-decimated manifold surface mesh (~1% size of raw CAD export). Optimized for OpenFOAM, MOOSE, or Blender. |
-
----
-
-## 📐 Geometry Characteristics
-* **Source Geometry:** `Eye.step` from [`feelpp/mesh.eye`](https://github.com/feelpp/mesh.eye)
-* **Isolated Region:** Posterior ocular shell (retinal boundary layer)
-* **Bounding Dimensions (X, Y, Z):** ~17.36 mm × 22.00 mm × 22.00 mm
-* **Topology:** 100% Watertight Manifold (`is_watertight = True`)
+## The Purpose
+While standard medical tools provide visual 3D models to look at anatomy, they cannot calculate how living tissue reacts to physical forces. The purpose of this repository is to bridge that gap by providing automated code that:
+1. **Cleans and shrinks massive 3D files** so computers can process them without crashing.
+2. **Fills the hollow shapes** into solid 3D blocks (tetrahedral meshes) required for physics math.
+3. **Applies biological rules** (such as soft-tissue rubber-like elasticity and internal eye pressure) so researchers can simulate real-world biomechanics.
 
 ---
 
-## 🛠 Workflow Summary
-1. **CAD Extraction:** Isolated the posterior retinal surface boundary using Onshape from multi-component CAD STEP files.
-2. **Topology Verification:** Analyzed initial raw surface mesh geometry (~4.97M faces) for manifold integrity in Python.
-3. **Decimation:** Applied quadric surface simplification via `trimesh` + `fast-simplification` to reduce polygon overhead by 99% while preserving structural volume and surface continuity.
+## Detailed Directory & File Breakdown
 
----
+### 1. `data/raw/`
+* **Purpose:** Acts as the secure storage folder for original, untouched source files downloaded from anatomical databases.
+* **Files:** 
+  * `Eye.step`, `cornea.step`, `lens.step`, `Optic Nerve.step`, `retina.step`, `sclera.step`: The raw CAD files representing each distinct layer of the eye.
 
-## 🚀 Quickstart (Python)
+### 2. `data/processed/`
+* **Purpose:** Stores cleaned-up, lightweight geometry assets that have been filtered and optimized for computational work.
+* **Files:**
+  * `retina_simplified.stl`, `cornea_simplified.stl`, `lens_simplified.stl`, `OpticNerve_simplified.stl`, `sclera_simplified_50k.stl`: Surface shell files with reduced triangle counts so simulation software can run smoothly.
 
-### Installation
-```bash
-pip install trimesh fast-simplification
-import trimesh
-
-# Load the decimated mesh
-mesh = trimesh.load('meshes/retina_simplified_50k.stl')
-
-# Print health metrics
-print("--- 3D Mesh Health Report ---")
-print(f"Number of Vertices: {len(mesh.vertices)}")
-print(f"Number of Triangles/Faces: {len(mesh.faces)}")
-print(f"Is Watertight / Manifold?: {mesh.is_watertight}")
-print(f"Bounding Box Dimensions (mm): {mesh.extents}")
+### 3. `scripts/`
+* **Purpose:** Houses all the Python automation code that performs calculations, file conversions, and data processing.
+* **Files:**
+  * `inspect_mesh.py`: Scans raw files to verify they are structurally sound and watertight.
+  * `inspect_and_decimate.py`: Cuts down massive high-resolution polygon counts into smooth, manageable files.
+  * `generate_tet_mesh.py`: Converts hollow surface shells into solid 3D tetrahedral volumes (`.msh`).
+  * `setup_physics_simulation.py`: Stamping mechanical properties (like stiffness and stretching limits) and anchoring the back edge of the eye in place.
+  * `run_baseline_simulation.py`: Simulates internal eye pressure and calculates how much the tissue deforms.
+  * `visualize.py`: Opens an interactive 3D window to display the anatomical mesh shapes.
+  * `visualize_results.py`: Opens an interactive 3D window to display mechanical stress and deformation heatmaps.
